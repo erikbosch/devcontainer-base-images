@@ -69,7 +69,7 @@ jobs:
             IMAGE_NAME=ttl.sh/eclipse-velocitas/${{ steps.github-repository-name-case-adjusted.outputs.lowercase }}/${{ matrix.image }}
             echo "push_ttl=true" >> $GITHUB_OUTPUT
           else
-            TAGS="latest"
+            TAGS=${{ github.ref_name }}
             IMAGE_NAME=ghcr.io/${{ steps.github-repository-name-case-adjusted.outputs.lowercase }}/${{ matrix.image }}
             echo "push_ttl=false" >> $GITHUB_OUTPUT
           fi
