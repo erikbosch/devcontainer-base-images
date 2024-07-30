@@ -65,14 +65,15 @@ jobs:
         shell: bash
         run: |
           if [[ ("${{ github.event_name }}" == "pull_request") ]] ; then
-            TAGS=${{ github.sha }}
-            IMAGE_NAME=ttl.sh/eclipse-velocitas/${{ steps.github-repository-name-case-adjusted.outputs.lowercase }}/${{ matrix.image }}
-            echo "push_ttl=true" >> $GITHUB_OUTPUT
+            echo "push_ghcr=never" >> $GITHUB_OUTPUT
           else
-            TAGS=${{ github.ref_name }}
-            IMAGE_NAME=ghcr.io/${{ steps.github-repository-name-case-adjusted.outputs.lowercase }}/${{ matrix.image }}
-            echo "push_ttl=false" >> $GITHUB_OUTPUT
+            echo "push_ghcr=always" >> $GITHUB_OUTPUT
           fi
+          TAGS=${{ github.ref_name }}
+          if [[ ("${{ github.ref_type }}" == "tag") ]] ; then
+            TAGS="${TAGS},latest"
+          fi
+          IMAGE_NAME=ghcr.io/${{ steps.github-repository-name-case-adjusted.outputs.lowercase }}/${{ matrix.image }}
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
           echo "image_name=${IMAGE_NAME}" >> $GITHUB_OUTPUT
 
@@ -89,16 +90,10 @@ jobs:
         with:
           imageName: ${{ steps.get-tag.outputs.image_name }}
           imageTag: ${{ steps.get-tag.outputs.tags }}
-          push: always
+          push: ${{ steps.get-tag.outputs.push }}
           platform: linux/amd64,linux/arm64
           noCache: true
           subFolder: ./Dockerfiles/${{ matrix.image }}/
-
-      - name: Posting ttl.sh message
-        if: steps.get-tag.outputs.push_ttl == 'true'
-        uses: eclipse-kuksa/kuksa-actions/post-container-location@4
-        with:
-          image: ${{ steps.get-tag.outputs.image_name }}:${{ steps.get-tag.outputs.tags }}
 
   generate-sbom:
     name: Generate SBOM
